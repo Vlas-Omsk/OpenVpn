@@ -2,6 +2,6 @@
 {
     internal interface IOptionConverter
     {
-        object? Convert(string name, string? value, Type targetType);
+        object? Convert(string name, IReadOnlyList<string>? value, Type targetType);
     }
 }

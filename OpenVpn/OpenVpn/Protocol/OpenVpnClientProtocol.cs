@@ -1,4 +1,5 @@
-﻿using System.Collections.Immutable;
+﻿using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Net.Sockets;
 using Microsoft.Extensions.Logging;
 using OpenVpn.Configuration;
@@ -343,17 +344,17 @@ namespace OpenVpn.Protocol
 
             _clientKeySource = CryptoKeySource.Generate(_random);
 
-            var peerInfo = new Dictionary<string, string?>()
+            var peerInfo = new Dictionary<string, IReadOnlyList<string>?>()
             {
-                { "IV_VER", _configuration.Version.ToString() },
-                { "IV_PLAT", _configuration.Platform.GetPeerInfoName() },
-                { "IV_TCPNL", "1" }, // TCP non-linear packet sequencing
-                { "IV_MTU", "1600" }, // Preferred or maximum MTU
-                { "IV_NCP", "2" }, // Supports cipher negotiation and GCM
-                { "IV_CIPHERS", string.Join(":", _configuration.DataCiphers) },
-                { "IV_PROTO", ((uint)protocolFlags).ToString() },
-                { "IV_GUI_VER", _configuration.Name },
-                { "IV_SSO", "openurl,webauth,crtext" }
+                { "IV_VER", [_configuration.Version.ToString()] },
+                { "IV_PLAT", [_configuration.Platform.GetPeerInfoName()] },
+                { "IV_TCPNL", ["1"] }, // TCP non-linear packet sequencing
+                { "IV_MTU", ["1600"] }, // Preferred or maximum MTU
+                { "IV_NCP", ["2"] }, // Supports cipher negotiation and GCM
+                { "IV_CIPHERS", [string.Join(":", _configuration.DataCiphers)] },
+                { "IV_PROTO", [((uint)protocolFlags).ToString()] },
+                { "IV_GUI_VER", [_configuration.Name] },
+                { "IV_SSO", ["openurl,webauth,crtext"] }
             };
 
             _controlChannel.Connect();
@@ -363,7 +364,7 @@ namespace OpenVpn.Protocol
                 KeySource = _clientKeySource.Value,
                 Password = string.Empty,
                 Username = string.Empty,
-                Options = new Dictionary<string, string?>()
+                Options = new Dictionary<string, IReadOnlyList<string>?>()
                 {
                     { "default", null }
                 },

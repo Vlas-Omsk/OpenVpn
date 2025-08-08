@@ -33,5 +33,7 @@ namespace OpenVpn.Options
         [Required]
         [Name("key-method")]
         public required int KeyMethod { get; init; }
+        [Name("cipher")]
+        public required string? Cipher { get; init; }
     }
 }

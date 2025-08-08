@@ -1,9 +1,9 @@
 ﻿namespace OpenVpn.Options.Converters
 {
-    internal sealed class ParseOptionConverter<T> : IOptionConverter
+    internal sealed class ParseOptionConverter<T> : SingleValueOptionConverter
         where T : IParsable<T>
     {
-        public object? Convert(string name, string? value, Type targetType)
+        protected override object? ConvertOverride(string name, string? value, Type targetType)
         {
             if (value == null)
             {

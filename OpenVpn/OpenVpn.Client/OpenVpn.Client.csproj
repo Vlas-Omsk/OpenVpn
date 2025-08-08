@@ -19,6 +19,9 @@
     <None Update="cert.pem">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+    <None Update="endpoint.txt">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Update="key.pem">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>

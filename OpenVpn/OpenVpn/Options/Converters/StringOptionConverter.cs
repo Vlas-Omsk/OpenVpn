@@ -1,8 +1,8 @@
 ﻿namespace OpenVpn.Options.Converters
 {
-    internal sealed class StringOptionConverter : IOptionConverter
+    internal sealed class StringOptionConverter : SingleValueOptionConverter
     {
-        public object? Convert(string name, string? value, Type targetType)
+        protected override object? ConvertOverride(string name, string? value, Type targetType)
         {
             return value;
         }

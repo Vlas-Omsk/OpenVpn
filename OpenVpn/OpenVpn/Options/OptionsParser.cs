@@ -5,14 +5,21 @@ namespace OpenVpn.Options
 {
     internal static class OptionsParser
     {
-        public static string Stringify(IReadOnlyDictionary<string, string?> options, char separator, char keyValueSeparator)
+        public static string Stringify(IReadOnlyDictionary<string, IReadOnlyList<string>?> options, char separator, char keyValueSeparator)
         {
-            return string.Join(separator, options.Select(x => $"{x.Key}{(x.Value == null ? "" : $"{keyValueSeparator}{x.Value}")}"));
+            return string.Join(
+                separator,
+                options.SelectMany(x =>
+                    x.Value == null ?
+                        [$"{x.Key}"] :
+                        x.Value.Select(c => $"{x.Key}{keyValueSeparator}{c}")
+                )
+            );
         }
 
-        public static IReadOnlyDictionary<string, string?> Parse(TextReader reader, char separator, char keyValueSeparator)
+        public static IReadOnlyDictionary<string, IReadOnlyList<string>?> Parse(TextReader reader, char separator, char keyValueSeparator)
         {
-            var options = ImmutableDictionary.CreateBuilder<string, string?>();
+            var options = ImmutableDictionary.CreateBuilder<string, IReadOnlyList<string>?>();
 
             Span<char> buffer = stackalloc char[1024];
             var currentPart = new StringBuilder();
@@ -24,7 +31,22 @@ namespace OpenVpn.Options
             {
                 if (string.IsNullOrWhiteSpace(key) ||
                     string.IsNullOrEmpty(key))
-                    throw new ArgumentException("Key cannot be null or empty");
+                    throw new FormatException("Key cannot be null or empty");
+            }
+
+            void Add(string value)
+            {
+                if (options.TryGetValue(currentKey!, out var list))
+                {
+                    if (list == null)
+                        throw new FormatException("Key duplicated");
+                }
+                else
+                {
+                    options.Add(currentKey!, list = new List<string>());
+                }
+
+                ((List<string>)list).Add(value);
             }
 
             while ((charsRead = reader.Read(buffer)) > 0)
@@ -49,7 +71,7 @@ namespace OpenVpn.Options
                         {
                             ThrowIfKeyEmpty(currentKey);
 
-                            options.Add(currentKey!, partStr);
+                            Add(partStr);
                         }
 
                         currentPart.Clear();
@@ -84,11 +106,11 @@ namespace OpenVpn.Options
                 {
                     ThrowIfKeyEmpty(currentKey);
 
-                    options.Add(currentKey!, partStr);
+                    Add(partStr);
                 }
             }
 
-            return options;
+            return options.ToImmutable();
         }
     }
 }

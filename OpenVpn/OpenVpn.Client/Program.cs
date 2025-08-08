@@ -71,7 +71,7 @@ namespace OpenVpn.Protocol
 
                         icmpPacket.UpdateIcmpChecksum();
 
-                        var ipPacket = new PacketDotNet.IPv4Packet(setupPacket.InterfaceConfigIpv4!.Address, setupPacket.InterfaceConfigIpv4!.Gateway);
+                        var ipPacket = new PacketDotNet.IPv4Packet(setupPacket.InterfaceConfigIpv4!.Address, IPAddress.Parse("8.8.8.8"));
 
                         ipPacket.PayloadPacket = icmpPacket;
 

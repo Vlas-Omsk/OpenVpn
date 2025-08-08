@@ -12,10 +12,10 @@ namespace OpenVpn.Control.Packets
         private const char _peerInfoSeparator = '\n';
         private const char _peerInfoKeyValueSeparator = '=';
         private CryptoKeySource _keySource;
-        private IReadOnlyDictionary<string, string?> _options = null!;
+        private IReadOnlyDictionary<string, IReadOnlyList<string>?> _options = null!;
         private string _username = null!;
         private string _password = null!;
-        private IReadOnlyDictionary<string, string?> _peerInfo = null!;
+        private IReadOnlyDictionary<string, IReadOnlyList<string>?> _peerInfo = null!;
 
         public required CryptoKeySource KeySource
         {
@@ -23,7 +23,7 @@ namespace OpenVpn.Control.Packets
             init => _keySource = value;
         }
 
-        public required IReadOnlyDictionary<string, string?> Options
+        public required IReadOnlyDictionary<string, IReadOnlyList<string>?> Options
         {
             get => _options;
             init => _options = value;
@@ -41,7 +41,7 @@ namespace OpenVpn.Control.Packets
             init => _password = value;
         }
 
-        public required IReadOnlyDictionary<string, string?> PeerInfo
+        public required IReadOnlyDictionary<string, IReadOnlyList<string>?> PeerInfo
         {
             get => _peerInfo;
             init => _peerInfo = value;

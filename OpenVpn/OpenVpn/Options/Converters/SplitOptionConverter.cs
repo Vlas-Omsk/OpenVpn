@@ -1,7 +1,6 @@
-﻿
-namespace OpenVpn.Options.Converters
+﻿namespace OpenVpn.Options.Converters
 {
-    internal sealed class SplitOptionConverter : IOptionConverter
+    internal sealed class SplitOptionConverter : SingleValueOptionConverter
     {
         private readonly char _delimiter;
 
@@ -10,7 +9,7 @@ namespace OpenVpn.Options.Converters
             _delimiter = delimiter;
         }
 
-        public object? Convert(string name, string? value, Type targetType)
+        protected override object? ConvertOverride(string name, string? value, Type targetType)
         {
             if (value == null)
                 return null;

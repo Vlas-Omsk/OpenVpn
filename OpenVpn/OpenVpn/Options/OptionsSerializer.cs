@@ -18,25 +18,25 @@ namespace OpenVpn.Options
             { typeof(string), new StringOptionConverter() },
             { typeof(Enum), new EnumOptionConverter() }
         };
-        private IEnumerator<KeyValuePair<string, string?>> _enumerator = null!;
+        private IEnumerator<KeyValuePair<string, IReadOnlyList<string>?>> _enumerator = null!;
         private object _instance = null!;
         private ImmutableDictionary<string, Property> _properties = null!;
-        private Dictionary<string, string?> _unknownOptions = null!;
+        private Dictionary<string, IReadOnlyList<string>?> _unknownOptions = null!;
 
         private sealed class Property
         {
             public required Type Type { get; init; }
             public required bool Required { get; init; }
             public required IOptionConverter Converter { get; init; }
-            public required IReadOnlyCollection<string> Names { get; init; }
+            public required IReadOnlyList<string> Names { get; init; }
             public required MemberAccessor Accessor { get; init; }
         }
 
-        public IReadOnlyDictionary<string, string?> UnknownOptions => _unknownOptions;
+        public IReadOnlyDictionary<string, IReadOnlyList<string>?> UnknownOptions => _unknownOptions;
         private string Name => _enumerator.Current.Key;
-        private string? Value => _enumerator.Current.Value;
+        private IReadOnlyList<string>? Value => _enumerator.Current.Value;
 
-        public T Serialize<T>(IReadOnlyDictionary<string, string?> options)
+        public T Serialize<T>(IReadOnlyDictionary<string, IReadOnlyList<string>?> options)
         {
             _enumerator = options.GetEnumerator();
             _instance = ObjectAccessor.Create(typeof(T)).Instance!;
