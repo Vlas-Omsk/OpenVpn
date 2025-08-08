@@ -30,27 +30,6 @@ namespace OpenVpn
             };
         }
 
-        public static InterfaceConfig ParseIpv6(string ifconfig)
-        {
-            var parts = ifconfig.Split(' ');
-
-            if (parts.Length != 2)
-                throw new FormatException("IfConfig should have 2 parts");
-
-            var addressParts = parts[0].Split('/');
-
-            var address = IPAddress.Parse(addressParts[0]);
-            var mask = int.Parse(addressParts[1]);
-            var gateway = IPAddress.Parse(parts[1]);
-
-            return new InterfaceConfig()
-            {
-                Address = address,
-                Gateway = gateway,
-                Mask = mask
-            };
-        }
-
         private static int MaskToBits(string mask)
         {
             if (string.IsNullOrWhiteSpace(mask))
@@ -95,6 +74,27 @@ namespace OpenVpn
             }
 
             return count;
+        }
+
+        public static InterfaceConfig ParseIpv6(string ifconfig)
+        {
+            var parts = ifconfig.Split(' ');
+
+            if (parts.Length != 2)
+                throw new FormatException("IfConfig should have 2 parts");
+
+            var addressParts = parts[0].Split('/');
+
+            var address = IPAddress.Parse(addressParts[0]);
+            var mask = int.Parse(addressParts[1]);
+            var gateway = IPAddress.Parse(parts[1]);
+
+            return new InterfaceConfig()
+            {
+                Address = address,
+                Gateway = gateway,
+                Mask = mask
+            };
         }
     }
 }
