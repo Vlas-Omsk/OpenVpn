@@ -1,0 +1,9 @@
+[submodule "PinkSystem"]
+	path = PinkSystem
+	url = https://github.com/Vlas-Omsk/PinkSystem
+[submodule "bc-csharp"]
+	path = bc-csharp
+	url = https://github.com/Vlas-Omsk/bc-csharp.git
+[submodule "packetnet"]
+	path = packetnet
+	url = https://github.com/Vlas-Omsk/packetnet.git
