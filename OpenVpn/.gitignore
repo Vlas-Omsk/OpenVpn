@@ -134,6 +134,7 @@ $RECYCLE.BIN/
 
 _NCrunch*
 
-*/OpenVpn.Client/cert.pem
-*/OpenVpn.Client/key.pem
-*/OpenVpn.Client/tls-crypt.pem
+**/OpenVpn.Client/cert.pem
+**/OpenVpn.Client/key.pem
+**/OpenVpn.Client/tls-crypt.pem
+**/OpenVpn.Client/endpoint.txt

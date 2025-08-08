@@ -14,9 +14,11 @@ namespace OpenVpn.Protocol
             using var loggerFactory = LoggerFactory.Create(x => x.AddConsole());
             var socketsProvider = new SystemNetSocketsProvider();
 
+            var endpoint = File.ReadAllText("endpoint.txt").Split(':');
+
             var options = new OpenVpnClientConfiguration()
             {
-                Remote = new IPEndPoint(IPAddress.Parse("77.110.99.232"), 8496),
+                Remote = new IPEndPoint(IPAddress.Parse(endpoint[0]), int.Parse(endpoint[1])),
                 Protocol = ProtocolType.Tcp,
                 ControlCrypto = new OpenVpnTlsControlCrypto()
                 {
