@@ -6,6 +6,7 @@ using OpenVpn.Buffers;
 using OpenVpn.Control.Crypto;
 using OpenVpn.Control.Packets;
 using OpenVpn.IO;
+using OpenVpn.Queues;
 using OpenVpn.Sessions;
 using OpenVpn.Sessions.Packets;
 using PinkSystem;

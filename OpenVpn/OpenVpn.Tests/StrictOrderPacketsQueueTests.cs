@@ -2,6 +2,7 @@ using Microsoft.Extensions.Logging;
 using OpenVpn.Sessions.Packets;
 using OpenVpn.IO;
 using Xunit.Abstractions;
+using OpenVpn.Queues;
 
 namespace OpenVpn.Tests
 {

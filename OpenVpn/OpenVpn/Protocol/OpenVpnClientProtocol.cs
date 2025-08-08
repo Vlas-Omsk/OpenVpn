@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Collections.Immutable;
+﻿using System.Collections.Immutable;
 using System.Net.Sockets;
 using Microsoft.Extensions.Logging;
 using OpenVpn.Configuration;

@@ -3,6 +3,7 @@ using CommunityToolkit.HighPerformance;
 using Microsoft.Extensions.Logging;
 using OpenVpn.Crypto;
 using OpenVpn.IO;
+using OpenVpn.Queues;
 using OpenVpn.Sessions.Packets;
 using Org.BouncyCastle.Crypto.Engines;
 using PinkSystem;

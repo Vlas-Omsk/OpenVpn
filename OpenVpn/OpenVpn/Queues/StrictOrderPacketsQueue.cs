@@ -1,9 +1,9 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using Microsoft.Extensions.Logging;
 
-namespace OpenVpn
+namespace OpenVpn.Queues
 {
-    internal sealed class StrictOrderPacketsQueue<T>
+    internal sealed class StrictOrderPacketsQueue<T> : IPacketsQueue<T>
     {
         private readonly int _maximumSize;
         private readonly ILogger<StrictOrderPacketsQueue<T>> _logger;
