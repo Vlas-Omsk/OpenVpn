@@ -4,6 +4,8 @@
 [submodule "bc-csharp"]
 	path = bc-csharp
 	url = https://github.com/Vlas-Omsk/bc-csharp.git
+	branch = release/v2.6
 [submodule "packetnet"]
 	path = packetnet
 	url = https://github.com/Vlas-Omsk/packetnet.git
+	branch = release/v1.4
