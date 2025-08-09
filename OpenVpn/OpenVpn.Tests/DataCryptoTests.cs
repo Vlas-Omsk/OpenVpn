@@ -6,6 +6,8 @@ namespace OpenVpn.Tests
 {
     public class DataCryptoTests
     {
+        // TODO: Validate output structure
+
         [Theory]
         [InlineData("AES-128-GCM", null, false)]
         [InlineData("AES-128-CBC", null, false)]
