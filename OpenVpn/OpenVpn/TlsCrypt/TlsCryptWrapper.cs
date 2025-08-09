@@ -4,11 +4,15 @@ using Microsoft.Extensions.Logging;
 using OpenVpn.Crypto;
 using OpenVpn.IO;
 using OpenVpn.Queues;
+using OpenVpn.Sessions;
 using OpenVpn.Sessions.Packets;
+using Org.BouncyCastle.Crypto.Digests;
 using Org.BouncyCastle.Crypto.Engines;
+using Org.BouncyCastle.Crypto.Macs;
+using Org.BouncyCastle.Security;
 using PinkSystem;
 
-namespace OpenVpn.Sessions.Wrappers
+namespace OpenVpn.TlsCrypt
 {
     internal sealed class TlsCryptWrapper : ISessionChannel
     {
@@ -17,7 +21,7 @@ namespace OpenVpn.Sessions.Wrappers
         private const int _headerSize = _packetIdSize + _timeSize;
         private readonly PacketsQueue<TlsCryptPacket> _packetsQueue;
         private readonly ISessionChannel _channel;
-        private readonly ICrypto _crypto;
+        private readonly CtrCrypto _crypto;
         private readonly MemoryStream _sendStreamBuffer = new();
         private byte[] _receiveBuffer = new byte[Buffers.Buffer.DefaultSize];
         private uint _packetId = 1;
@@ -35,6 +39,7 @@ namespace OpenVpn.Sessions.Wrappers
             ISessionChannel channel,
             CryptoKeys keys,
             OpenVpnMode mode,
+            SecureRandom random,
             ILoggerFactory loggerFactory
         )
         {
@@ -48,12 +53,16 @@ namespace OpenVpn.Sessions.Wrappers
                 () => new AesEngine(),
                 keySize: 32,
                 ivSize: 16,
-                mode
+                () => new HMac(new Sha256Digest()),
+                mode,
+                random
             );
         }
 
         public void Write(SessionPacket packet)
         {
+            var packetId = _packetId++;
+
             var output = ArrayPool<byte>.Shared.Rent(
                 _headerSize +
                 _crypto.GetEncryptedSize(packet.Data.Length)
@@ -64,8 +73,6 @@ namespace OpenVpn.Sessions.Wrappers
 
             try
             {
-                var packetId = _packetId++;
-
                 using (var packetWriter = new PacketWriter(new MemoryStream(output)))
                 {
                     packetWriter.WriteUInt(packetId);

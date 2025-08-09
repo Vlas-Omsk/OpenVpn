@@ -8,13 +8,15 @@ using OpenVpn.Control.Crypto.Tls;
 using OpenVpn.Control.Packets;
 using OpenVpn.Crypto;
 using OpenVpn.Data;
+using OpenVpn.Data.Crypto;
 using OpenVpn.Data.Packets;
+using OpenVpn.Exceptions;
 using OpenVpn.IO;
 using OpenVpn.Options;
 using OpenVpn.Protocol.Packets;
 using OpenVpn.Sessions;
 using OpenVpn.Sessions.Packets;
-using OpenVpn.Sessions.Wrappers;
+using OpenVpn.TlsCrypt;
 using Org.BouncyCastle.Security;
 using PacketDotNet;
 using PacketDotNet.Utils;
@@ -53,6 +55,11 @@ namespace OpenVpn.Protocol
             _socketsProvider = socketsProvider;
             _loggerFactory = loggerFactory;
         }
+
+        private KeyExchangeOptions KeyExchangeOptions => _keyExchangeOptions ??
+            throw new InvalidOperationException("Push options not received");
+        private PushOptions PushOptions => _pushOptions ??
+            throw new InvalidOperationException("Push options not received");
 
         public async Task Connect(CancellationToken cancellationToken)
         {
@@ -115,6 +122,8 @@ namespace OpenVpn.Protocol
                         break;
                     case PushReplyPacket pushReplyPacket:
                         return HandlePushReplyPacket(pushReplyPacket);
+                    case AuthFailedPacket authFailedPacket:
+                        throw new OpenVpnAuthFailedException(authFailedPacket.Reason);
                     case null:
                         break;
                     default:
@@ -161,34 +170,22 @@ namespace OpenVpn.Protocol
         {
             var serializer = new OptionsSerializer();
 
-            var options = serializer.Serialize<PushOptions>(packet.Options);
+            _pushOptions = serializer.Serialize<PushOptions>(packet.Options);
 
-            if (options.ProtocolFlags == null)
-                throw new OpenVpnProtocolException("Server not sent protocol flags");
-
-            if (!options.PeerId.HasValue)
-                throw new OpenVpnProtocolException("Server not sent peer id");
-
-            EstablishDataChannel(
-                options.PeerId.Value,
-                options.Cipher,
-                options.ProtocolFlags.Contains("tls-ekm")
-            );
+            EstablishDataChannel();
 
             var ifConfigIpv4 = (InterfaceConfig?)null;
             var ifConfigIpv6 = (InterfaceConfig?)null;
 
-            if (options.IfConfig != null)
-                ifConfigIpv4 = InterfaceConfig.ParseIpv4(options.IfConfig, options.RouteGateway);
+            if (_pushOptions.IfConfig != null)
+                ifConfigIpv4 = InterfaceConfig.ParseIpv4(_pushOptions.IfConfig, _pushOptions.RouteGateway);
 
-            if (options.IfConfigIpv6 != null)
-                ifConfigIpv6 = InterfaceConfig.ParseIpv6(options.IfConfigIpv6);
-
-            _pushOptions = options;
+            if (_pushOptions.IfConfigIpv6 != null)
+                ifConfigIpv6 = InterfaceConfig.ParseIpv6(_pushOptions.IfConfigIpv6);
 
             return new ConnectPacket()
             {
-                DeviceType = _keyExchangeOptions!.DeviceType,
+                DeviceType = KeyExchangeOptions.DeviceType,
                 InterfaceConfigIpv4 = ifConfigIpv4,
                 InterfaceConfigIpv6 = ifConfigIpv6,
             };
@@ -201,7 +198,7 @@ namespace OpenVpn.Protocol
 
         private IOpenVpnProtocolPacket HandleRawDataPacket(RawDataPacket packet)
         {
-            switch (_keyExchangeOptions!.DeviceType)
+            switch (KeyExchangeOptions.DeviceType)
             {
                 case OpenVpnDeviceType.Tun:
                     var ipPacket = new RawIPPacket(
@@ -324,6 +321,7 @@ namespace OpenVpn.Protocol
                         controlChannel,
                         new CryptoKeys(tlsCryptControlCryptoWrapper.StaticKey),
                         OpenVpnMode.Client,
+                        _random,
                         _loggerFactory
                     );
                     break;
@@ -371,11 +369,7 @@ namespace OpenVpn.Protocol
             });
         }
 
-        private void EstablishDataChannel(
-            uint peerId,
-            string cipherName,
-            bool useTlsKeyMaterialExport
-        )
+        private void EstablishDataChannel()
         {
             var dataChannel = _sessionChannelDemuxer!.RegisterFor([
                 typeof(DataV2PacketHeader).GetSessionPacketOpcode()
@@ -383,7 +377,7 @@ namespace OpenVpn.Protocol
 
             CryptoKeys keys;
 
-            if (useTlsKeyMaterialExport)
+            if (PushOptions.ProtocolFlags?.Contains("tls-ekm") == true)
             {
                 keys = ((TlsCrypto)_controlCrypto!).Keys!.Value;
             }
@@ -402,18 +396,24 @@ namespace OpenVpn.Protocol
             _serverKeySource!.Value.TryClear();
             _serverKeySource = null;
 
-            var crypto = Crypto.Crypto.Create(
-                cipherName,
+            var crypto = DataCrypto.Create(
+                PushOptions.Cipher,
+                KeyExchangeOptions.Auth,
                 keys,
                 OpenVpnMode.Client,
                 epochFormat: false,
                 _random
             );
 
+            if (!PushOptions.PeerId.HasValue)
+                throw new OpenVpnProtocolException("Server not sent peer id");
+
             _dataChannel = new DataChannel(
-                peerId,
+                PushOptions.PeerId.Value,
+                maximumQueueSize: 4,
                 crypto,
-                dataChannel
+                dataChannel,
+                _loggerFactory
             );
         }
 

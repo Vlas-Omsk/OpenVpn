@@ -1,6 +1,7 @@
 ﻿using System.Buffers;
 using System.Collections.Immutable;
 using System.Reflection;
+using CommunityToolkit.HighPerformance;
 using Microsoft.Extensions.Logging;
 using OpenVpn.Buffers;
 using OpenVpn.Control.Crypto;
@@ -60,12 +61,7 @@ namespace OpenVpn.Control
             );
             _controlChannel = controlChannel;
             _sendMode = mode;
-            _receiveMode = mode switch
-            {
-                OpenVpnMode.Client => OpenVpnMode.Server,
-                OpenVpnMode.Server => OpenVpnMode.Client,
-                _ => throw new NotSupportedException()
-            };
+            _receiveMode = mode.Invert();
             _crypto = crypto;
             _logger = loggerFactory.CreateLogger<SessionChannel>();
         }
@@ -141,6 +137,8 @@ namespace OpenVpn.Control
             var packetReader = new PacketReader(
                 _receivePipe.AvailableMemory
             );
+
+            var d = string.Join(" ", _receivePipe.AvailableMemory.ToArray().Select(x => x.ToString("X2")));
 
             var packetType = IdentifyPacketType(packetReader);
 

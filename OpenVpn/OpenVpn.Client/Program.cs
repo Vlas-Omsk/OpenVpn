@@ -62,25 +62,66 @@ namespace OpenVpn.Protocol
                         logger.LogInformation(ethernetDataPacket.Packet.ToString(PacketDotNet.StringOutputType.VerboseColored));
                         break;
                     case ConnectPacket setupPacket:
-                        var icmpPacket = new PacketDotNet.IcmpV4Packet(new PacketDotNet.Utils.ByteArraySegment(new byte[8]));
-
-                        icmpPacket.TypeCode = PacketDotNet.IcmpV4TypeCode.EchoRequest;
-                        icmpPacket.Id = 0x1234;
-                        icmpPacket.Sequence = 1;
-                        icmpPacket.PayloadData = System.Text.Encoding.ASCII.GetBytes("Hello");
-
-                        icmpPacket.UpdateIcmpChecksum();
-
-                        var ipPacket = new PacketDotNet.IPv4Packet(setupPacket.InterfaceConfigIpv4!.Address, setupPacket.InterfaceConfigIpv4!.Gateway);
-
-                        ipPacket.PayloadPacket = icmpPacket;
-
-                        ipPacket.UpdateIPChecksum();
-
-                        protocol.Write(new IpDataPacket()
+                        void WritePingIpv4(IPAddress ipAddress)
                         {
-                            Packet = ipPacket
-                        });
+                            var icmpPacket = new PacketDotNet.IcmpV4Packet(new PacketDotNet.Utils.ByteArraySegment(new byte[8]));
+
+                            icmpPacket.TypeCode = PacketDotNet.IcmpV4TypeCode.EchoRequest;
+                            icmpPacket.Id = 0x1234;
+                            icmpPacket.Sequence = 1;
+                            icmpPacket.PayloadData = System.Text.Encoding.ASCII.GetBytes("Hello");
+
+                            icmpPacket.UpdateIcmpChecksum();
+
+                            var ipPacket = new PacketDotNet.IPv4Packet(setupPacket.InterfaceConfigIpv4!.Address, ipAddress);
+
+                            ipPacket.PayloadPacket = icmpPacket;
+
+                            ipPacket.UpdateIPChecksum();
+
+                            protocol.Write(new IpDataPacket()
+                            {
+                                Packet = ipPacket
+                            });
+                        }
+
+                        if (setupPacket.InterfaceConfigIpv4 != null)
+                        {
+                            if (setupPacket.InterfaceConfigIpv4.Gateway != null)
+                                WritePingIpv4(setupPacket.InterfaceConfigIpv4.Gateway);
+
+                            WritePingIpv4(IPAddress.Parse("8.8.8.8"));
+                        }
+
+                        void WritePingIpv6(IPAddress ipAddress)
+                        {
+                            var icmpPacket = new PacketDotNet.IcmpV6Packet(new PacketDotNet.Utils.ByteArraySegment(new byte[8]));
+
+                            icmpPacket.Type = PacketDotNet.IcmpV6Type.EchoRequest;
+                            icmpPacket.Code = 0;
+                            icmpPacket.PayloadData = System.Text.Encoding.ASCII.GetBytes("Hello");
+
+                            var ipPacket = new PacketDotNet.IPv6Packet(setupPacket.InterfaceConfigIpv6!.Address, ipAddress);
+
+                            ipPacket.PayloadPacket = icmpPacket;
+                            ipPacket.NextHeader = PacketDotNet.ProtocolType.IcmpV6;
+                            ipPacket.PayloadLength = (ushort)icmpPacket.TotalPacketLength;
+
+                            icmpPacket.UpdateIcmpChecksum();
+
+                            protocol.Write(new IpDataPacket()
+                            {
+                                Packet = ipPacket
+                            });
+                        }
+
+                        if (setupPacket.InterfaceConfigIpv6 != null)
+                        {
+                            if (setupPacket.InterfaceConfigIpv6.Gateway != null)
+                                WritePingIpv6(setupPacket.InterfaceConfigIpv6.Gateway);
+
+                            WritePingIpv6(IPAddress.Parse("2001:4860:4860::8888"));
+                        }
                         break;
                     case null:
                         break;
@@ -90,26 +131,6 @@ namespace OpenVpn.Protocol
 
                 await protocol.WaitForData(CancellationToken.None);
             }
-
-            //var icmpPacket = new PacketDotNet.IcmpV6Packet(new PacketDotNet.Utils.ByteArraySegment(new byte[8]));
-
-            //icmpPacket.Type = PacketDotNet.IcmpV6Type.EchoRequest;
-            //icmpPacket.Code = 0;
-            //icmpPacket.PayloadData = System.Text.Encoding.ASCII.GetBytes("Hello");
-
-            //var destinationIp = IPAddress.Parse("fd42:11:2::0:0:1");
-            //var ipPacket = new PacketDotNet.IPv6Packet(IfConfigIpv6, destinationIp);
-
-            //ipPacket.PayloadPacket = icmpPacket;
-            //ipPacket.NextHeader = PacketDotNet.ProtocolType.IcmpV6;
-            //ipPacket.PayloadLength = (ushort)icmpPacket.TotalPacketLength;
-
-            //icmpPacket.UpdateIcmpChecksum();
-
-            //_dataChannel.Write(new RawDataPacket()
-            //{
-            //    Data = ipPacket.Bytes
-            //});
         }
     }
 }

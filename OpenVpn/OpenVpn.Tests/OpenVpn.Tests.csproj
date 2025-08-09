@@ -10,6 +10,18 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="ConvertersTests.cs" />
+    <Compile Remove="OptionsParserTests.cs" />
+    <Compile Remove="OptionsSerializerTests.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="ConvertersTests.cs" />
+    <None Include="OptionsParserTests.cs" />
+    <None Include="OptionsSerializerTests.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="coverlet.collector" Version="6.0.0" />
     <PackageReference Include="MartinCostello.Logging.XUnit" Version="0.6.0" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.8.0" />

@@ -10,7 +10,7 @@ namespace OpenVpn.Control.Packets
         private const char _optionsKeyValueSeparator = ' ';
         private IReadOnlyDictionary<string, IReadOnlyList<string>?> _options = null!;
 
-        public IReadOnlyDictionary<string, IReadOnlyList<string>?> Options
+        public required IReadOnlyDictionary<string, IReadOnlyList<string>?> Options
         {
             get => _options;
             init => _options = value;

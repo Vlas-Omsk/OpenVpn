@@ -1,19 +1,52 @@
-﻿using Org.BouncyCastle.Crypto;
+﻿using OpenVpn.Crypto;
+using Org.BouncyCastle.Crypto;
+using Org.BouncyCastle.Crypto.Digests;
 using Org.BouncyCastle.Crypto.Engines;
+using Org.BouncyCastle.Crypto.Macs;
 using Org.BouncyCastle.Security;
 
-namespace OpenVpn.Crypto
+namespace OpenVpn.Data.Crypto
 {
-    internal static class Crypto
+    internal static class DataCrypto
     {
-        public static ICrypto Create(
+        public static IDataCrypto Create(
             string cipherName,
+            string? macName,
             CryptoKeys keys,
             OpenVpnMode mode,
             bool epochFormat,
             SecureRandom random
         )
         {
+            macName = macName?.ToUpper();
+
+            Func<IMac>? macFactory;
+
+            if (macName == null)
+            {
+                macFactory = null;
+            }
+            else if (macName == "SHA512")
+            {
+                macFactory = () => new HMac(new Sha512Digest());
+            }
+            else if (macName == "SHA384")
+            {
+                macFactory = () => new HMac(new Sha384Digest());
+            }
+            else if (macName == "SHA256")
+            {
+                macFactory = () => new HMac(new Sha256Digest());
+            }
+            else if (macName == "SHA1")
+            {
+                macFactory = () => new HMac(new Sha1Digest());
+            }
+            else
+            {
+                throw new NotSupportedException("Mac not supported");
+            }
+
             cipherName = cipherName.ToUpper();
 
             var parts = cipherName.Split('-');
@@ -31,7 +64,7 @@ namespace OpenVpn.Crypto
 
                 return parts[2] switch
                 {
-                    "GCM" => new GcmCrypto(
+                    "GCM" => AeadCrypto.CreateGcm(
                         keys,
                         cipherFactory,
                         keySize,
@@ -39,20 +72,23 @@ namespace OpenVpn.Crypto
                         mode,
                         epochFormat
                     ),
-                    "CBC" => new CbcCrypto(
+                    "CBC" => BufferedCrypto.CreateCbc(
                         keys,
                         cipherFactory,
                         keySize,
                         ivSize: 16,
+                        macFactory,
                         mode,
                         random
                     ),
-                    "CTR" => new CtrCrypto(
+                    "CTR" => BufferedCrypto.CreateCtr(
                         keys,
                         cipherFactory,
                         keySize,
                         ivSize: 16,
-                        mode
+                        macFactory,
+                        mode,
+                        random
                     ),
                     _ => throw new NotSupportedException()
                 };
@@ -66,11 +102,12 @@ namespace OpenVpn.Crypto
 
                 return parts[1] switch
                 {
-                    "CBC" => new CbcCrypto(
+                    "CBC" => BufferedCrypto.CreateCbc(
                         keys,
                         cipherFactory,
                         keySize: 16,
                         ivSize: 8,
+                        macFactory,
                         mode,
                         random
                     ),
@@ -86,7 +123,7 @@ namespace OpenVpn.Crypto
             }
             else
             {
-                throw new NotSupportedException("Engine not cupported");
+                throw new NotSupportedException("Cipher not supported");
             }
         }
     }

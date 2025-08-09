@@ -2,10 +2,12 @@
 using System.Collections.Immutable;
 using System.Reflection;
 using CommunityToolkit.HighPerformance;
+using Microsoft.Extensions.Logging;
 using MoreLinq;
-using OpenVpn.Crypto;
+using OpenVpn.Data.Crypto;
 using OpenVpn.Data.Packets;
 using OpenVpn.IO;
+using OpenVpn.Queues;
 using OpenVpn.Sessions;
 using OpenVpn.Sessions.Packets;
 using PinkSystem;
@@ -20,18 +22,31 @@ namespace OpenVpn.Data
         private static readonly Type? _emptyIdentifierPacketType;
         private const byte _keyId = 0;
         private readonly uint _peerId;
-        private readonly ICrypto _crypto;
+        private readonly PacketsQueue<DataPacket> _packetQueue;
+        private readonly IDataCrypto _crypto;
         private readonly ISessionChannel _dataChannel;
         private readonly MemoryStream _sendPacketStreamBuffer = new();
         private readonly MemoryStream _sendPacketHeaderStreamBuffer = new();
         private readonly MemoryStream _receivePacketHeaderStreamBuffer = new();
+        private uint _packetId = 1;
+
+        private sealed class DataPacket
+        {
+            public required ReadOnlyMemory<byte> Data { get; init; }
+        }
 
         public DataChannel(
             uint peerId,
-            ICrypto crypto,
-            ISessionChannel dataChannel
+            int maximumQueueSize,
+            IDataCrypto crypto,
+            ISessionChannel dataChannel,
+            ILoggerFactory loggerFactory
         )
         {
+            _packetQueue = new(
+                maximumQueueSize,
+                loggerFactory.CreateLogger<PacketsQueue<DataPacket>>()
+            );
             _peerId = peerId;
             _crypto = crypto;
             _dataChannel = dataChannel;
@@ -89,6 +104,7 @@ namespace OpenVpn.Data
                 KeyId = _keyId,
                 PeerId = _peerId,
             };
+            var packetId = _packetId++;
 
             var data = ArrayPool<byte>.Shared.Rent(
                 _crypto.GetEncryptedSize(input.Length)
@@ -96,7 +112,7 @@ namespace OpenVpn.Data
 
             try
             {
-                var dataLength = Encrypt(header, input, data);
+                var dataLength = Encrypt(header, input, data, packetId);
 
                 _dataChannel.Write(new()
                 {
@@ -110,7 +126,7 @@ namespace OpenVpn.Data
             }
         }
 
-        private int Encrypt(ISessionPacketHeader header, ReadOnlySpan<byte> input, Span<byte> output)
+        private int Encrypt(ISessionPacketHeader header, ReadOnlySpan<byte> input, Span<byte> output, uint packetId)
         {
             try
             {
@@ -118,7 +134,12 @@ namespace OpenVpn.Data
 
                 header.Serialize(headerWriter);
 
-                return _crypto.Encrypt(_sendPacketHeaderStreamBuffer.ToReadOnlySpan(), input, output);
+                return _crypto.Encrypt(
+                    _sendPacketHeaderStreamBuffer.ToReadOnlySpan(),
+                    input,
+                    output,
+                    packetId
+                );
             }
             finally
             {
@@ -141,9 +162,13 @@ namespace OpenVpn.Data
 
                 try
                 {
-                    var dataLength = Decrypt(packet.Header, packet.Data.Span, data);
+                    var dataLength = Decrypt(packet.Header, packet.Data.Span, data, out var packetId);
 
-                    return Deserialize(data.AsMemory(0, dataLength));
+                    _packetQueue.TryEnqueue(packetId, new()
+                    {
+                        // Packet can be overwritten after dequeuing so cloning needed data
+                        Data = data.Slice(0, dataLength).ToArray(),
+                    });
                 }
                 finally
                 {
@@ -154,9 +179,14 @@ namespace OpenVpn.Data
             {
                 throw new OpenVpnUnexpectedPacketTypeException(packet.GetType());
             }
+
+            if (!_packetQueue.TryDequeue(out var dequeuedPacket))
+                return null;
+
+            return Deserialize(dequeuedPacket.Data);
         }
 
-        private int Decrypt(ISessionPacketHeader header, ReadOnlySpan<byte> input, Span<byte> output)
+        private int Decrypt(ISessionPacketHeader header, ReadOnlySpan<byte> input, Span<byte> output, out uint packetId)
         {
             try
             {
@@ -164,7 +194,12 @@ namespace OpenVpn.Data
 
                 header.Serialize(headerWriter);
 
-                return _crypto.Decrypt(_receivePacketHeaderStreamBuffer.ToReadOnlySpan(), input, output);
+                return _crypto.Decrypt(
+                    _receivePacketHeaderStreamBuffer.ToReadOnlySpan(),
+                    input,
+                    output,
+                    out packetId
+                );
             }
             finally
             {

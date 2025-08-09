@@ -7,7 +7,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenVpn", "OpenVpn\OpenVpn.
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Libraries", "Libraries", "{A043531C-D57C-41C8-AA2E-6622B95C1B67}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenVpn.Client", "OpenVpn.Client\OpenVpn.Client.csproj", "{61901D55-9A67-4E5B-A80D-709168A9FA46}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenVpn.Client.Demo", "OpenVpn.Client\OpenVpn.Client.Demo.csproj", "{61901D55-9A67-4E5B-A80D-709168A9FA46}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenVpn.Tests", "OpenVpn.Tests\OpenVpn.Tests.csproj", "{4C585754-7629-4552-BABE-1B5B5863CC5F}"
 EndProject
