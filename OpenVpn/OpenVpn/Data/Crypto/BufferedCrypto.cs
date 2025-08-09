@@ -8,6 +8,8 @@ using Org.BouncyCastle.Security;
 
 namespace OpenVpn.Data.Crypto
 {
+    // Encryption: https://github.com/OpenVPN/openvpn/blob/db1fd1a80baa9e44df8ae82f0fd2b56c59195484/src/openvpn/crypto.c#L190
+    // Decryption: https://github.com/OpenVPN/openvpn/blob/db1fd1a80baa9e44df8ae82f0fd2b56c59195484/src/openvpn/crypto.c#L610
     internal sealed class BufferedCrypto : IDataCrypto
     {
         private const int _packetIdSize = 4;

@@ -6,6 +6,8 @@ using Org.BouncyCastle.Security;
 
 namespace OpenVpn.TlsCrypt
 {
+    // Encryption: https://github.com/OpenVPN/openvpn/blob/db1fd1a80baa9e44df8ae82f0fd2b56c59195484/src/openvpn/tls_crypt.c#L136
+    // Decryption: https://github.com/OpenVPN/openvpn/blob/db1fd1a80baa9e44df8ae82f0fd2b56c59195484/src/openvpn/tls_crypt.c#L209
     internal sealed class CtrCrypto
     {
         private readonly IMac _encryptMac;
