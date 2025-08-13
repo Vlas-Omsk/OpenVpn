@@ -178,9 +178,11 @@ namespace OpenVpn.Tests
             var parsed = OptionsParser.Parse(reader, ',', '=');
 
             Assert.Equal(originalOptions.Count, parsed.Count);
+
             foreach (var kvp in originalOptions)
             {
                 Assert.True(parsed.ContainsKey(kvp.Key));
+
                 if (kvp.Value == null)
                 {
                     Assert.Null(parsed[kvp.Key]);
