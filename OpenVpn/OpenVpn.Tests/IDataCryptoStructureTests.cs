@@ -8,6 +8,7 @@ namespace OpenVpn.Tests
     /// <summary>
     /// Comprehensive data structure tests for IDataCrypto interface following Write -> Send -> Check output structure pattern
     /// and Receive -> Read -> Check input structure validation pattern.
+    /// Tests actual implementations instead of mocks.
     /// </summary>
     public class IDataCryptoStructureTests
     {
