@@ -2,7 +2,7 @@
 
 namespace OpenVpn.Control.Packets
 {
-    [ControlPacket(new byte[0])]
+    [ControlPacket([])]
     internal sealed class KeyExchangeMethod1Packet : IControlPacket
     {
         public void Serialize(OpenVpnMode mode, PacketWriter writer)

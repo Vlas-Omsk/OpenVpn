@@ -2,7 +2,7 @@
 
 namespace OpenVpn.Data.Packets
 {
-    [DataPacket(new byte[0])]
+    [DataPacket([])]
     internal sealed class RawDataPacket : IDataPacket
     {
         private ReadOnlyMemory<byte> _data = null!;
