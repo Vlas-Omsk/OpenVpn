@@ -19,7 +19,7 @@ namespace OpenVpn.Tests
         {
             var converter = new BoolOptionConverter();
 
-            var result = converter.Convert("test", str, targetType);
+            var result = converter.Convert("test", str == null ? null : new[] { str }, targetType);
 
             Assert.Equal(expectedValue, result);
         }
@@ -29,7 +29,7 @@ namespace OpenVpn.Tests
         {
             var converter = new BoolOptionConverter();
 
-            Assert.Throws<FormatException>(() => converter.Convert("test", "invalid", typeof(bool)));
+            Assert.Throws<FormatException>(() => converter.Convert("test", new[] { "invalid" }, typeof(bool)));
         }
 
         [Fact]
@@ -37,7 +37,7 @@ namespace OpenVpn.Tests
         {
             var converter = new BoolOptionConverter();
 
-            Assert.Throws<FormatException>(() => converter.Convert("test", "", typeof(bool)));
+            Assert.Throws<FormatException>(() => converter.Convert("test", new[] { "" }, typeof(bool)));
         }
     }
 
@@ -52,7 +52,7 @@ namespace OpenVpn.Tests
         {
             var converter = new StringOptionConverter();
 
-            var result = converter.Convert("test", str, typeof(string));
+            var result = converter.Convert("test", str == null ? null : new[] { str }, typeof(string));
 
             Assert.Equal(expectedValue, result);
         }
@@ -76,7 +76,7 @@ namespace OpenVpn.Tests
         {
             var converter = new SplitOptionConverter(delimiter);
 
-            var result = converter.Convert("test", str, typeof(string[]));
+            var result = converter.Convert("test", str == null ? null : new[] { str }, typeof(string[]));
 
             Assert.Equal(expectedValue, result);
         }
@@ -100,7 +100,7 @@ namespace OpenVpn.Tests
 
             var converter = ObjectAccessor.Create(typeof(ParseOptionConverter<>).MakeGenericType(underlyingType));
 
-            var result = converter.CallMethod(nameof(ParseOptionConverter<int>.Convert), "test", str, targetType);
+            var result = converter.CallMethod(nameof(ParseOptionConverter<int>.Convert), "test", str == null ? null : new[] { str }, targetType);
 
             Assert.Equal(expectedValue, result);
         }
@@ -110,7 +110,7 @@ namespace OpenVpn.Tests
         {
             var converter = new ParseOptionConverter<int>();
 
-            Assert.Throws<FormatException>(() => converter.Convert("test", "not-a-number", typeof(int)));
+            Assert.Throws<FormatException>(() => converter.Convert("test", new[] { "not-a-number" }, typeof(int)));
         }
 
         [Fact]
@@ -146,7 +146,7 @@ namespace OpenVpn.Tests
         {
             var converter = new ParseOptionConverter<int>();
 
-            Assert.Throws<FormatException>(() => converter.Convert("test", "", typeof(int)));
+            Assert.Throws<FormatException>(() => converter.Convert("test", new[] { "" }, typeof(int)));
         }
 
         [Fact]
@@ -154,7 +154,7 @@ namespace OpenVpn.Tests
         {
             var converter = new ParseOptionConverter<int>();
 
-            Assert.Throws<OverflowException>(() => converter.Convert("test", "9999999999999999999", typeof(int)));
+            Assert.Throws<OverflowException>(() => converter.Convert("test", new[] { "9999999999999999999" }, typeof(int)));
         }
     }
 
@@ -177,7 +177,7 @@ namespace OpenVpn.Tests
         {
             var converter = new EnumOptionConverter();
 
-            var result = converter.Convert("test", str, targetType);
+            var result = converter.Convert("test", str == null ? null : new[] { str }, targetType);
 
             Assert.Equal(expectedValue, result);
         }
@@ -195,7 +195,7 @@ namespace OpenVpn.Tests
         {
             var converter = new EnumOptionConverter();
 
-            Assert.Throws<ArgumentException>(() => converter.Convert("test", "InvalidValue", typeof(TestEnum)));
+            Assert.Throws<ArgumentException>(() => converter.Convert("test", new[] { "InvalidValue" }, typeof(TestEnum)));
         }
 
         [Fact]
@@ -203,7 +203,7 @@ namespace OpenVpn.Tests
         {
             var converter = new EnumOptionConverter();
 
-            Assert.Throws<ArgumentException>(() => converter.Convert("test", "", typeof(TestEnum)));
+            Assert.Throws<ArgumentException>(() => converter.Convert("test", new[] { "" }, typeof(TestEnum)));
         }
     }
 }

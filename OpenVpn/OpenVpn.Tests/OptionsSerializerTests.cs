@@ -37,7 +37,7 @@ namespace OpenVpn.Tests
         public void Serialize_EmptyDictionary_ReturnsObjectWithDefaults()
         {
             var serializer = new OptionsSerializer();
-            var options = new Dictionary<string, string?>();
+            var options = new Dictionary<string, IReadOnlyList<string>?>();
 
             var result = serializer.Serialize<TestOptions>(options);
 
@@ -52,9 +52,9 @@ namespace OpenVpn.Tests
         public void Serialize_StringOption_SetsCorrectly()
         {
             var serializer = new OptionsSerializer();
-            var options = new Dictionary<string, string?>
+            var options = new Dictionary<string, IReadOnlyList<string>?>
             {
-                { "string-option", "test-value" }
+                { "string-option", new[] { "test-value" } }
             };
 
             var result = serializer.Serialize<TestOptions>(options);
@@ -66,9 +66,9 @@ namespace OpenVpn.Tests
         public void Serialize_IntOption_SetsCorrectly()
         {
             var serializer = new OptionsSerializer();
-            var options = new Dictionary<string, string?>
+            var options = new Dictionary<string, IReadOnlyList<string>?>
             {
-                { "int-option", "42" }
+                { "int-option", new[] { "42" } }
             };
 
             var result = serializer.Serialize<TestOptions>(options);
@@ -80,7 +80,7 @@ namespace OpenVpn.Tests
         public void Serialize_BoolOption_SetsCorrectly()
         {
             var serializer = new OptionsSerializer();
-            var options = new Dictionary<string, string?>
+            var options = new Dictionary<string, IReadOnlyList<string>?>
             {
                 { "bool-option", null }
             };
@@ -94,9 +94,9 @@ namespace OpenVpn.Tests
         public void Serialize_EnumOption_SetsCorrectly()
         {
             var serializer = new OptionsSerializer();
-            var options = new Dictionary<string, string?>
+            var options = new Dictionary<string, IReadOnlyList<string>?>
             {
-                { "enum-option", "Value2" }
+                { "enum-option", new[] { "Value2" } }
             };
 
             var result = serializer.Serialize<TestOptions>(options);
@@ -108,9 +108,9 @@ namespace OpenVpn.Tests
         public void Serialize_RequiredOption_WithValue_SetsCorrectly()
         {
             var serializer = new OptionsSerializer();
-            var options = new Dictionary<string, string?>
+            var options = new Dictionary<string, IReadOnlyList<string>?>
             {
-                { "required-option", "required-value" }
+                { "required-option", new[] { "required-value" } }
             };
 
             var result = serializer.Serialize<TestOptions>(options);
@@ -122,7 +122,7 @@ namespace OpenVpn.Tests
         public void Serialize_RequiredOption_WithNullValue_ThrowsFormatException()
         {
             var serializer = new OptionsSerializer();
-            var options = new Dictionary<string, string?>
+            var options = new Dictionary<string, IReadOnlyList<string>?>
             {
                 { "required-option", null }
             };
@@ -135,9 +135,9 @@ namespace OpenVpn.Tests
         public void Serialize_NullableInt_WithValue_SetsCorrectly()
         {
             var serializer = new OptionsSerializer();
-            var options = new Dictionary<string, string?>
+            var options = new Dictionary<string, IReadOnlyList<string>?>
             {
-                { "nullable-int", "123" }
+                { "nullable-int", new[] { "123" } }
             };
 
             var result = serializer.Serialize<TestOptions>(options);
@@ -149,7 +149,7 @@ namespace OpenVpn.Tests
         public void Serialize_NullableInt_WithNull_RemainsNull()
         {
             var serializer = new OptionsSerializer();
-            var options = new Dictionary<string, string?>();
+            var options = new Dictionary<string, IReadOnlyList<string>?>();
 
             var result = serializer.Serialize<TestOptions>(options);
 
@@ -160,9 +160,9 @@ namespace OpenVpn.Tests
         public void Serialize_SplitOption_SplitsCorrectly()
         {
             var serializer = new OptionsSerializer();
-            var options = new Dictionary<string, string?>
+            var options = new Dictionary<string, IReadOnlyList<string>?>
             {
-                { "split-option", "value1 value2 value3" }
+                { "split-option", new[] { "value1 value2 value3" } }
             };
 
             var result = serializer.Serialize<TestOptions>(options);
@@ -175,13 +175,13 @@ namespace OpenVpn.Tests
         public void Serialize_MultipleOptions_SetsAllCorrectly()
         {
             var serializer = new OptionsSerializer();
-            var options = new Dictionary<string, string?>
+            var options = new Dictionary<string, IReadOnlyList<string>?>
             {
-                { "string-option", "test" },
-                { "int-option", "100" },
+                { "string-option", new[] { "test" } },
+                { "int-option", new[] { "100" } },
                 { "bool-option", null },
-                { "enum-option", "Value3" },
-                { "required-option", "required" }
+                { "enum-option", new[] { "Value3" } },
+                { "required-option", new[] { "required" } }
             };
 
             var result = serializer.Serialize<TestOptions>(options);
@@ -197,10 +197,10 @@ namespace OpenVpn.Tests
         public void Serialize_UnknownOptions_StoresInUnknownOptions()
         {
             var serializer = new OptionsSerializer();
-            var options = new Dictionary<string, string?>
+            var options = new Dictionary<string, IReadOnlyList<string>?>
             {
-                { "string-option", "test" },
-                { "unknown-option1", "value1" },
+                { "string-option", new[] { "test" } },
+                { "unknown-option1", new[] { "value1" } },
                 { "unknown-option2", null }
             };
 
@@ -209,7 +209,7 @@ namespace OpenVpn.Tests
             Assert.Equal("test", result.StringOption);
             Assert.Contains("unknown-option1", serializer.UnknownOptions.Keys);
             Assert.Contains("unknown-option2", serializer.UnknownOptions.Keys);
-            Assert.Equal("value1", serializer.UnknownOptions["unknown-option1"]);
+            Assert.Equal("value1", serializer.UnknownOptions["unknown-option1"]?[0]);
             Assert.Null(serializer.UnknownOptions["unknown-option2"]);
         }
 
@@ -217,9 +217,9 @@ namespace OpenVpn.Tests
         public void Serialize_InvalidIntValue_ThrowsFormatException()
         {
             var serializer = new OptionsSerializer();
-            var options = new Dictionary<string, string?>
+            var options = new Dictionary<string, IReadOnlyList<string>?>
             {
-                { "int-option", "not-a-number" }
+                { "int-option", new[] { "not-a-number" } }
             };
 
             Assert.Throws<FormatException>(() => serializer.Serialize<TestOptions>(options));
@@ -229,9 +229,9 @@ namespace OpenVpn.Tests
         public void Serialize_InvalidEnumValue_ThrowsArgumentException()
         {
             var serializer = new OptionsSerializer();
-            var options = new Dictionary<string, string?>
+            var options = new Dictionary<string, IReadOnlyList<string>?>
             {
-                { "enum-option", "InvalidValue" }
+                { "enum-option", new[] { "InvalidValue" } }
             };
 
             Assert.Throws<ArgumentException>(() => serializer.Serialize<TestOptions>(options));
@@ -241,16 +241,16 @@ namespace OpenVpn.Tests
         public void Serialize_RealPushOptions_WorksCorrectly()
         {
             var serializer = new OptionsSerializer();
-            var options = new Dictionary<string, string?>
+            var options = new Dictionary<string, IReadOnlyList<string>?>
             {
                 { "route-nopull", null },
-                { "route-gateway", "10.8.0.1" },
-                { "cipher", "AES-256-GCM" },
-                { "tun-mtu", "1500" },
-                { "ping", "10" },
-                { "ping-restart", "120" },
-                { "topology", "subnet" },
-                { "peer-id", "1" }
+                { "route-gateway", new[] { "10.8.0.1" } },
+                { "cipher", new[] { "AES-256-GCM" } },
+                { "tun-mtu", new[] { "1500" } },
+                { "ping", new[] { "10" } },
+                { "ping-restart", new[] { "120" } },
+                { "topology", new[] { "subnet" } },
+                { "peer-id", new[] { "1" } }
             };
 
             var result = serializer.Serialize<PushOptions>(options);
@@ -269,10 +269,10 @@ namespace OpenVpn.Tests
         public void Serialize_EmptyValues_HandleCorrectly()
         {
             var serializer = new OptionsSerializer();
-            var options = new Dictionary<string, string?>
+            var options = new Dictionary<string, IReadOnlyList<string>?>
             {
-                { "string-option", "" },
-                { "int-option", "0" }
+                { "string-option", new[] { "" } },
+                { "int-option", new[] { "0" } }
             };
 
             var result = serializer.Serialize<TestOptions>(options);
@@ -290,7 +290,7 @@ namespace OpenVpn.Tests
         public void Serialize_PropertyWithoutName_ThrowsNotSupportedException()
         {
             var serializer = new OptionsSerializer();
-            var options = new Dictionary<string, string?>();
+            var options = new Dictionary<string, IReadOnlyList<string>?>();
 
             Assert.Throws<NotSupportedException>(() => serializer.Serialize<InvalidOptions>(options));
         }
