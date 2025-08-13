@@ -8,7 +8,7 @@ namespace OpenVpn.Tests
         [Fact]
         public void Stringify_EmptyDictionary_ReturnsEmptyString()
         {
-            var options = ImmutableDictionary<string, string?>.Empty;
+            var options = ImmutableDictionary<string, IReadOnlyList<string>?>.Empty;
 
             var result = OptionsParser.Stringify(options, ',', '=');
 
@@ -18,7 +18,7 @@ namespace OpenVpn.Tests
         [Fact]
         public void Stringify_SingleKeyNoValue_ReturnsKeyOnly()
         {
-            var options = new Dictionary<string, string?>()
+            var options = new Dictionary<string, IReadOnlyList<string>?>()
             {
                 { "verbose", null }
             };
@@ -31,9 +31,9 @@ namespace OpenVpn.Tests
         [Fact]
         public void Stringify_SingleKeyWithValue_ReturnsKeyValuePair()
         {
-            var options = new Dictionary<string, string?>()
+            var options = new Dictionary<string, IReadOnlyList<string>?>()
             {
-                { "port", "1194" }
+                { "port", new[] { "1194" } }
             };
 
             var result = OptionsParser.Stringify(options, ',', '=');
@@ -47,11 +47,11 @@ namespace OpenVpn.Tests
         [InlineData('\n', ' ')]
         public void Stringify_MultipleOptions_ReturnsCorrectFormat(char separator, char keyValueSeparator)
         {
-            var options = new Dictionary<string, string?>()
+            var options = new Dictionary<string, IReadOnlyList<string>?>()
             {
                 { "verbose", null },
-                { "port", "1194" },
-                { "proto", "udp" },
+                { "port", new[] { "1194" } },
+                { "proto", new[] { "udp" } },
                 { "comp-lzo", null }
             };
 
@@ -97,7 +97,7 @@ namespace OpenVpn.Tests
 
             Assert.Single(result);
             Assert.True(result.ContainsKey("port"));
-            Assert.Equal("1194", result["port"]);
+            Assert.Equal("1194", result["port"]?[0]);
         }
 
         [Fact]
@@ -110,8 +110,8 @@ namespace OpenVpn.Tests
             Assert.Equal(4, result.Count);
             Assert.True(result.ContainsKey("verbose"));
             Assert.Null(result["verbose"]);
-            Assert.Equal("1194", result["port"]);
-            Assert.Equal("udp", result["proto"]);
+            Assert.Equal("1194", result["port"]?[0]);
+            Assert.Equal("udp", result["proto"]?[0]);
             Assert.True(result.ContainsKey("comp-lzo"));
             Assert.Null(result["comp-lzo"]);
         }
@@ -124,9 +124,9 @@ namespace OpenVpn.Tests
             var result = OptionsParser.Parse(reader, ';', ':');
 
             Assert.Equal(3, result.Count);
-            Assert.Equal("value1", result["key1"]);
+            Assert.Equal("value1", result["key1"]?[0]);
             Assert.Null(result["key2"]);
-            Assert.Equal("value3", result["key3"]);
+            Assert.Equal("value3", result["key3"]?[0]);
         }
 
         [Fact]
@@ -134,7 +134,7 @@ namespace OpenVpn.Tests
         {
             using var reader = new StringReader(",,key1=value1,,");
 
-            Assert.Throws<ArgumentException>(() => OptionsParser.Parse(reader, ',', '='));
+            Assert.Throws<FormatException>(() => OptionsParser.Parse(reader, ',', '='));
         }
 
         [Fact]
@@ -145,8 +145,8 @@ namespace OpenVpn.Tests
             var result = OptionsParser.Parse(reader, ',', '=');
 
             Assert.Equal(2, result.Count);
-            Assert.Equal("", result["key1"]);
-            Assert.Equal("value2", result["key2"]);
+            Assert.Equal("", result["key1"]?[0]);
+            Assert.Equal("value2", result["key2"]?[0]);
         }
 
         [Fact]
@@ -157,20 +157,20 @@ namespace OpenVpn.Tests
             var result = OptionsParser.Parse(reader, ',', '=');
 
             Assert.Equal(3, result.Count);
-            Assert.Equal("/etc/openvpn", result["path"]);
-            Assert.Equal("\\etc\\openvpn", result["path2"]);
-            Assert.Equal("VPN Server", result["desc"]);
+            Assert.Equal("/etc/openvpn", result["path"]?[0]);
+            Assert.Equal("\\etc\\openvpn", result["path2"]?[0]);
+            Assert.Equal("VPN Server", result["desc"]?[0]);
         }
 
         [Fact]
         public void StringifyThenParse_RoundTrip_PreservesData()
         {
-            var originalOptions = new Dictionary<string, string?>()
+            var originalOptions = new Dictionary<string, IReadOnlyList<string>?>()
             {
                 { "verbose", null },
-                { "port", "1194" },
-                { "proto", "udp" },
-                { "dev", "tun0" }
+                { "port", new[] { "1194" } },
+                { "proto", new[] { "udp" } },
+                { "dev", new[] { "tun0" } }
             };
 
             var stringified = OptionsParser.Stringify(originalOptions, ',', '=');
@@ -181,7 +181,14 @@ namespace OpenVpn.Tests
             foreach (var kvp in originalOptions)
             {
                 Assert.True(parsed.ContainsKey(kvp.Key));
-                Assert.Equal(kvp.Value, parsed[kvp.Key]);
+                if (kvp.Value == null)
+                {
+                    Assert.Null(parsed[kvp.Key]);
+                }
+                else
+                {
+                    Assert.Equal(kvp.Value[0], parsed[kvp.Key]?[0]);
+                }
             }
         }
 
@@ -199,7 +206,14 @@ namespace OpenVpn.Tests
 
             Assert.Single(result);
             Assert.True(result.ContainsKey(expectedKey));
-            Assert.Equal(expectedValue, result[expectedKey]);
+            if (expectedValue == null)
+            {
+                Assert.Null(result[expectedKey]);
+            }
+            else
+            {
+                Assert.Equal(expectedValue, result[expectedKey]?[0]);
+            }
         }
 
         [Fact]
@@ -216,8 +230,8 @@ namespace OpenVpn.Tests
             var result = OptionsParser.Parse(reader, ',', '=');
 
             Assert.Equal(1000, result.Count);
-            Assert.Equal("value500", result["key500"]);
-            Assert.Equal("value999", result["key999"]);
+            Assert.Equal("value500", result["key500"]?[0]);
+            Assert.Equal("value999", result["key999"]?[0]);
         }
     }
 }
